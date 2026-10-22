@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hynex</title>
+<link rel="icon" href="/icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#010101;--panel:#0d0d0f;--line:#1e1e22;--text:#ececef;--muted:#85858f;--red:#d4173f;--red2:#ff3a5e}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:15px/1.65 Sora,system-ui,sans-serif;display:flex;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--red2);outline-offset:2px}
+#side{width:264px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px;gap:12px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 6px}
+.brand img{width:30px;height:32px;object-fit:contain}
+.brand b{font-weight:500;letter-spacing:.32em;font-size:15px}
+.brand b i{font-style:normal;color:var(--red2)}
+#new{border:1px solid var(--line);border-radius:12px;padding:10px 14px;text-align:left}
+#new:hover{border-color:var(--red)}
+#list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.item{padding:9px 12px;border-radius:10px;color:var(--muted);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.item:hover{background:#151518;color:var(--text)}
+.item.on{background:#1a1a1e;color:var(--text);box-shadow:inset 2px 0 var(--red)} 
+.row{display:flex;align-items:center;border-radius:10px}
+.row:hover{background:#151518}
+.row.on{background:#1a1a1e;box-shadow:inset 2px 0 var(--red)}
+.row .item{flex:1;min-width:0;background:none !important;box-shadow:none !important}
+.row.on .item{color:var(--text)}
+.acts{display:none;gap:2px;padding-right:6px}
+.row:hover .acts{display:flex}
+.act{width:28px;height:28px;border-radius:8px;font-size:14px}
+.act:hover{background:#26262b}
+.pinned::before{content:"📌 ";font-size:11px}
+.lbl{padding:12px 12px 4px;font-size:12px;color:var(--muted);letter-spacing:.04em}
+@media(hover:none){.acts{display:flex}}
+main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+#menu{display:none;position:absolute;top:12px;left:12px;z-index:5;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+#feed{flex:1;overflow-y:auto;padding:28px 20px 12px}
+.wrap{max-width:760px;margin:0 auto}
+#welcome{text-align:center;padding-top:8vh}
+#welcome img{width:230px;max-width:60%}
+#welcome h1{font-weight:300;font-size:26px;margin:6px 0 26px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.chip{border:1px solid var(--line);border-radius:14px;padding:10px 16px;color:var(--muted);font-size:14px}
+.chip:hover{border-color:var(--red);color:var(--text)}
+.msg{display:flex;gap:14px;margin:0 0 26px}
+.msg.user{justify-content:flex-end}
+.msg.user .body{background:#17171b;border:1px solid var(--line);border-radius:18px 18px 4px 18px;padding:10px 16px;max-width:82%;white-space:pre-wrap}
+.msg.bot .av{width:28px;height:30px;object-fit:contain;flex-shrink:0;margin-top:2px}
+.msg.bot .body{min-width:0;flex:1}
+.body p{margin:0 0 12px}.body ul,.body ol{margin:0 0 12px 22px}.body h4{margin:14px 0 8px;font-weight:600}
+.body code{background:#17171b;border-radius:6px;padding:1px 6px;font-size:13px;font-family:ui-monospace,Consolas,monospace}
+.code{position:relative;margin:0 0 14px}
+.code pre{background:#0b0b0d;border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
+.code pre code{background:none;padding:0;line-height:1.55}
+.copy{position:absolute;top:8px;right:8px;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:2px 10px;background:var(--panel)}
+.copy:hover{color:var(--text);border-color:var(--red)}
+.dots span{display:inline-block;width:7px;height:7px;margin-right:5px;border-radius:50%;background:var(--red2);animation:b 1s infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes b{50%{opacity:.2;transform:translateY(-3px)}}
+@media(prefers-reduced-motion:reduce){.dots span{animation:none}}
+#bar{padding:8px 20px 18px}
+#box{max-width:760px;margin:0 auto;display:flex;align-items:flex-end;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:26px;padding:8px 8px 8px 20px}
+#box:focus-within{border-color:var(--red)}
+#in{flex:1;background:none;border:0;outline:0;color:var(--text);font:inherit;resize:none;max-height:180px;padding:8px 0}
+#in::placeholder{color:var(--muted)}
+#go{width:40px;height:40px;border-radius:50%;background:var(--red);display:grid;place-items:center;flex-shrink:0}
+#go:hover{background:var(--red2)}#go:disabled{opacity:.4;cursor:default}
+.note{text-align:center;color:var(--muted);font-size:12px;margin-top:8px}
+@media(max-width:760px){#side{position:fixed;inset:0 auto 0 0;z-index:9;transform:translateX(-100%);transition:transform .2s}#side.open{transform:none}#menu{display:block}#feed{padding-top:60px}}
+</style>
+</head>
+<body>
+<aside id="side">
+  <div class="brand"><img src="/icon.png" alt=""><b>HYNE<i>X</i></b></div>
+  <button id="new">+ New chat</button>
+  <div id="list"></div>
+</aside>
+<main>
+  <button id="menu" aria-label="Open chats">Chats</button>
+  <div id="feed"><div class="wrap" id="msgs"></div></div>
+  <div id="bar">
+    <div id="box">
+      <textarea id="in" rows="1" placeholder="Ask Hynex anything..." aria-label="Message"></textarea>
+      <button id="go" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+    </div>
+    <p class="note">Hynex can make mistakes. Check important information.</p>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const store={get:()=>{try{return JSON.parse(localStorage.hynex)||[]}catch{return[]}},set:v=>localStorage.hynex=JSON.stringify(v)};
+let chats=store.get(),cur=null,busy=false;
+const CHIPS=["Explain recursion with an example","Plan a 7-day Python study schedule","Quiz me on machine learning basics","Compare TF-IDF and embeddings"];
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function md(t){
+  const b=[];
+  t=esc(t).replace(/```(\w*)\n?([\s\S]*?)(```|$)/g,(m,l,c)=>{b.push('<div class="code"><button class="copy">Copy</button><pre><code>'+c.replace(/\n$/,'')+'</code></pre></div>');return"\u0000"+(b.length-1)+"\u0000"});
+  t=t.replace(/`([^`\n]+)`/g,"<code>$1</code>").replace(/\*\*([^*\n]+)\*\*/g,"<b>$1</b>").replace(/^#{1,3} (.+)$/gm,"<h4>$1</h4>")
+   .replace(/(?:^[-*] .+(?:\n|$))+/gm,m=>"<ul>"+m.trim().split("\n").map(l=>"<li>"+l.slice(2)+"</li>").join("")+"</ul>")
+   .replace(/(?:^\d+\. .+(?:\n|$))+/gm,m=>"<ol>"+m.trim().split("\n").map(l=>"<li>"+l.replace(/^\d+\. /,"")+"</li>").join("")+"</ol>");
+  return t.split(/\n{2,}/).map(p=>/^<(ul|ol|h4)|\u0000/.test(p)?p:"<p>"+p.replace(/\n/g,"<br>")+"</p>").join("").replace(/\u0000(\d+)\u0000/g,(m,i)=>b[i]);
+}
+function row(role,text){
+  const d=document.createElement("div");d.className="msg "+(role==="user"?"user":"bot");
+  d.innerHTML=(role==="user"?"":'<img class="av" src="/icon.png" alt="">')+'<div class="body"></div>';
+  const body=d.lastChild;role==="user"?body.textContent=text:body.innerHTML=md(text);
+  $("msgs").appendChild(d);return body;
+}
+function welcome(){
+  $("msgs").innerHTML='<div id="welcome"><img src="/logo.png" alt="Hynex AI Learning Assistant"><h1>What do you want to learn today?</h1><div class="chips"></div></div>';
+  CHIPS.forEach(c=>{const b=document.createElement("button");b.className="chip";b.textContent=c;b.onclick=()=>send(c);document.querySelector(".chips").appendChild(b)});
+}
+
+
+function renderList(){
+  $("list").innerHTML="";
+  const label=t=>{const l=document.createElement("div");l.className="lbl";l.textContent=t;$("list").appendChild(l)};
+  const add=c=>{
+    const r=document.createElement("div");r.className="row"+(c.id===cur?" on":"");
+    const b=document.createElement("button");b.className="item";b.textContent=c.title;
+    b.onclick=()=>{open_(c.id);$("side").classList.remove("open")};
+    const a=document.createElement("div");a.className="acts";
+    const p=document.createElement("button");p.className="act";p.title=c.pinned?"Unpin":"Pin";p.textContent=c.pinned?"📍":"📌";
+    p.onclick=e=>{e.stopPropagation();c.pinned=!c.pinned;store.set(chats);renderList()};
+    const d=document.createElement("button");d.className="act";d.title="Delete";d.textContent="🗑";
+    d.onclick=e=>{e.stopPropagation();if(!confirm("Delete this chat?"))return;chats=chats.filter(x=>x.id!==c.id);store.set(chats);if(cur===c.id){cur=null;welcome()}renderList()};
+    a.append(p,d);r.append(b,a);$("list").appendChild(r);
+  };
+  const pins=chats.filter(c=>c.pinned),rest=chats.filter(c=>!c.pinned);
+  if(pins.length){label("Pinned");pins.forEach(add)}
+  if(rest.length){label("Chats");rest.forEach(add)}
+}
+function open_(id){
+  cur=id;renderList();const c=chats.find(x=>x.id===id);$("msgs").innerHTML="";
+  c&&c.messages.length?c.messages.forEach(m=>row(m.role==="user"?"user":"bot",m.content)):welcome();
+  $("feed").scrollTop=1e9;
+}
+function newChat(){cur=null;renderList();welcome();$("in").focus()}
+async function send(text){
+  text=(text||$("in").value).trim();if(!text||busy)return;
+  busy=true;$("go").disabled=true;$("in").value="";$("in").style.height="auto";
+  let c=chats.find(x=>x.id===cur);
+  if(!c){c={id:Date.now(),title:text.slice(0,40),messages:[]};chats.unshift(c);cur=c.id;$("msgs").innerHTML=""}
+  const history=c.messages.slice();
+  c.messages.push({role:"user",content:text});row("user",text);
+  const body=row("bot","");body.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
+  renderList();$("feed").scrollTop=1e9;
+  let out="";
+  try{
+    const r=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text,history})});
+    if(!r.ok)throw new Error();
+    const rd=r.body.getReader(),dec=new TextDecoder();
+    for(;;){const{done,value}=await rd.read();if(done)break;out+=dec.decode(value,{stream:true});body.innerHTML=md(out);$("feed").scrollTop=1e9}
+  }catch{out=out||"Could not reach the Hynex server. Check that it is running.";body.innerHTML=md(out)}
+  c.messages.push({role:"assistant",content:out});store.set(chats);busy=false;$("go").disabled=false;$("in").focus();
+}
+$("go").onclick=()=>send();
+$("new").onclick=()=>{newChat();$("side").classList.remove("open")};
+$("menu").onclick=()=>$("side").classList.toggle("open");
+$("in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
+$("in").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.height=e.target.scrollHeight+"px"});
+document.addEventListener("click",e=>{if(e.target.classList.contains("copy")){navigator.clipboard.writeText(e.target.nextElementSibling.innerText);e.target.textContent="Copied";setTimeout(()=>e.target.textContent="Copy",1200)}});
+renderList();welcome();
+</script>
+</body>
+</html>
