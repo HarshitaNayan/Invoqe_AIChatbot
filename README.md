@@ -98,7 +98,7 @@ Keep `.env` and the private `runtime/` database out of Git. Hosted accounts requ
 - Google login needs OAuth configuration. Local accounts currently have no password recovery or email verification.
 - LSA retrieval uses a local statistical representation, rather than a neural embedding service.
 
-## Live Demo:## https://invoqe-aichatbot.onrender.com/
+## Live Demo: **https://invoqe-aichatbot.onrender.com/**
 
 
 ## Author
