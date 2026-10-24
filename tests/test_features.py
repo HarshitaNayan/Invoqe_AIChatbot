@@ -59,18 +59,18 @@ class Features(unittest.TestCase):
  def test_study_summary(self):
   q={'questions':[{'question':'2+2?','options':['1','2','3','4'],'correct_index':3,'explanation':'2+2=4'}]}
   with patch('app.extensions.stream_gemini',return_value=iter([json.dumps(q)])):
-   self.assertEqual(self.c.post('/api/study',json={'topic':'addition','count':1}).status_code,200)
+   self.assertEqual(self.c.post('/api/study',headers={'X-Gemini-API-Key':'test-key-for-unit-tests-only'},json={'topic':'addition','count':1}).status_code,200)
   with patch('app.extensions.stream_gemini',return_value=iter(['{"cards":[{"front":"Q","back":"A"}]}'])):
-   self.assertEqual(self.c.post('/api/study',json={'topic':'test','count':1,'kind':'flashcards'}).status_code,200)
+   self.assertEqual(self.c.post('/api/study',headers={'X-Gemini-API-Key':'test-key-for-unit-tests-only'},json={'topic':'test','count':1,'kind':'flashcards'}).status_code,200)
   with patch('app.extensions.stream_gemini',return_value=iter(['not JSON'])):
-   self.assertEqual(self.c.post('/api/study',json={'topic':'test','count':1}).status_code,502)
+   self.assertEqual(self.c.post('/api/study',headers={'X-Gemini-API-Key':'test-key-for-unit-tests-only'},json={'topic':'test','count':1}).status_code,502)
   doc=self.upload().json()['id']
   with patch('app.extensions.stream_gemini',return_value=iter(['A short summary.'])):
-   self.assertIn('short summary',self.c.post('/api/summarize',headers=self.g,json={'attachment_ids':[doc]}).text)
-  with patch.dict(os.environ,{'GEMINI_API_KEY':''}):self.assertEqual(self.c.post('/api/study',json={'topic':'test'}).status_code,503)
+   self.assertIn('short summary',self.c.post('/api/summarize',headers={**self.g,'X-Gemini-API-Key':'test-key-for-unit-tests-only'},json={'attachment_ids':[doc]}).text)
+  with patch.dict(os.environ,{'GEMINI_API_KEY':''}):self.assertEqual(self.c.post('/api/study',json={'topic':'test'}).status_code,400)
  def test_multimodal_contract(self):
   response=Mock(ok=True);response.iter_lines.return_value=iter(['data: '+json.dumps({'candidates':[{'content':{'parts':[{'text':'Visible image'}]}}]})])
   with patch.dict(os.environ,{'GEMINI_API_KEY':'test-only'}),patch('app.llm.requests.post',return_value=response) as post:
-   self.assertEqual(''.join(stream_gemini([],'describe','',[{'mime':'image/png','raw':b'example'}])),'Visible image')
+   self.assertEqual(''.join(stream_gemini([],'describe','',[{'mime':'image/png','raw':b'example'}],api_key='test-only')),'Visible image')
    self.assertEqual(post.call_args.kwargs['json']['contents'][-1]['parts'][1]['inline_data']['mime_type'],'image/png');response.close.assert_called_once()
 if __name__=='__main__':unittest.main()

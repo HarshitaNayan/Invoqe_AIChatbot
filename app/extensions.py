@@ -49,6 +49,13 @@ def install_extensions(app):
         if request.url.path.startswith('/api'):response.headers['Cache-Control']='no-store'
         return response
 
+def visitor_key(request):
+    # Request-scoped only: never stored in an account, database, cookie or log.
+    key = request.headers.get('x-gemini-api-key', '').strip()
+    if key and not re.fullmatch(r'[A-Za-z0-9_-]{20,256}', key):
+        raise HTTPException(400, 'Invalid API key format. Paste only your Gemini API key.')
+    return key
+
 def prepare_context(request,message,ids):
     docs=storage.documents(storage.owner(request),ids) if ids else []
     context,_=context_for(message,docs)
@@ -158,24 +165,28 @@ class AttachmentRequest(BaseModel):
 
 @router.post('/summarize')
 def summarize(req:AttachmentRequest,request:Request):
+    key=visitor_key(request)
+    if not key:raise HTTPException(400,'Add your Gemini API key using API key before requesting a summary.')
     docs=storage.documents(storage.owner(request),req.attachment_ids)
     # Bound combined output context and explicitly tell users which source range was sent.
     notes='\n\n'.join(f"[{d['name']}]\n{d['text'][:30000]}" for d in docs)
     if len(notes)>100000:raise HTTPException(400,'Summarize fewer files at once.')
     def generate():
         try:
-            yield from stream_gemini([], 'Summarize each attached source separately with key points and a short revision checklist. Text sources may be excerpts limited to the first 30,000 characters; say when the available text is incomplete. Do not invent unreadable content.',notes,docs)
+            yield from stream_gemini([], 'Summarize each attached source separately with key points and a short revision checklist. Text sources may be excerpts limited to the first 30,000 characters; say when the available text is incomplete. Do not invent unreadable content.',notes,docs,api_key=key)
         except Exception:
             yield '\n\n[Summary unavailable. Check Gemini API key, model access, connection and quota.]'
     return StreamingResponse(generate(),media_type='text/plain; charset=utf-8')
 
 @router.post('/study')
 def study(req:StudyRequest,request:Request):
+    key=visitor_key(request)
+    if not key:raise HTTPException(400,'Add your Gemini API key using API key before generating study material.')
     context,docs=prepare_context(request,req.topic,req.attachment_ids)
     schema='{"questions":[{"question":"...","options":["A","B","C","D"],"correct_index":0,"explanation":"..."}]}' if req.kind=='quiz' else '{"cards":[{"front":"...","back":"..."}]}'
     prompt=f'Create exactly {req.count} {req.kind} about: {req.topic}. Use provided sources when relevant and avoid unsupported claims. Return ONLY a JSON object, no markdown. Schema: {schema}. correct_index is a zero-based integer from 0 to 3.'
     try:
-        raw=''.join(stream_gemini([],prompt,context,docs))
+        raw=''.join(stream_gemini([],prompt,context,docs,api_key=key))
     except Exception:raise HTTPException(503,'Study generation needs a working Gemini connection. Check your API key, model and quota.')
     raw=re.sub(r'^```(?:json)?\s*|\s*```$','',raw.strip())
     try:

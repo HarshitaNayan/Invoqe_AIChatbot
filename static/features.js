@@ -2,6 +2,23 @@
 (() => {
 'use strict';
 let authRequired=false;
+// Memory only: reload, closing the tab or signing out clears this key.
+let geminiKey='';
+function keyPanel(){
+  const box=panel('Your Gemini API key');
+  box.append(element('p','Use your own Gemini key and quota for chat, file summaries, quizzes and flashcards. Your key is kept only in this page’s memory, and is cleared on reload, tab close or sign-out. It passes through the Hynex backend to Google; it is not saved in our database. Use only a Hynex host you trust.'));
+  const input=field(box,'Gemini API key','password');input.autocomplete='off';input.spellcheck=false;
+  input.placeholder=geminiKey?'A key is already set. Paste to replace it.':'Paste your Gemini API key';
+  const msg=errorBox(box);
+  box.append(button('Use key for this tab',()=>{
+    const key=input.value.trim();
+    if(!/^[A-Za-z0-9_-]{20,256}$/.test(key)){msg.textContent='Paste only your Gemini API key (no quotes or variable name).';return}
+    geminiKey=key;input.value='';dialog.close();toast('Key set for this tab. It will be checked when you make an AI request.');
+  },'fx-primary'),button('Remove key',()=>{geminiKey='';input.value='';dialog.close();toast('Key removed. Basic offline chat remains available.')}));
+  const link=element('a','Get a Gemini API key in Google AI Studio');link.href='https://aistudio.google.com/apikey';link.target='_blank';link.rel='noopener noreferrer';box.append(link);
+}
+function aiHeaders(){return geminiKey?{'X-Gemini-API-Key':geminiKey}:{}}
+
 let user=null, version=0, syncTimer, syncBlocked=false, syncRunning=false, dirty=false;
 let selectedIds=[], recognition=null, listening=false;
 const hex=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
@@ -12,7 +29,7 @@ const localKey=()=>user?'hynex_account_'+user.id:'hynex';
 const status=t=>{$('feature-status').textContent=t};
 function toast(t){let el=$('fx-toast');if(!el){el=document.createElement('div');el.id='fx-toast';el.setAttribute('role','status');document.body.append(el)}el.textContent=t;clearTimeout(el.timer);el.timer=setTimeout(()=>el.remove(),6500)}
 async function api(path,opts={}){
-  const headers={'X-Guest-ID':guest,...opts.headers};
+  const headers={'X-Guest-ID':guest,...opts.headers,...(['/study','/summarize'].includes(path)?aiHeaders():{})};
   if(opts.body && !(opts.body instanceof FormData))headers['Content-Type']='application/json';
   const r=await originalFetch('/api'+path,{...opts,headers});
   if(!r.ok){let data;try{data=await r.json()}catch{}throw new Error(typeof data?.detail==='string'?data.detail:'Request failed. Please try again.')}
@@ -75,7 +92,7 @@ window.fetch=(input,opts={})=>{
   if(input==='/chat'){
     const payload=JSON.parse(opts.body);payload.attachment_ids=selectedIds.slice();payload.history=(payload.history||[]).slice(-10);
     const c=chats.find(c=>c.id===cur);if(c)c.attachment_ids=selectedIds.slice();
-    opts={...opts,body:JSON.stringify(payload),headers:{...opts.headers,'X-Guest-ID':guest}};
+    opts={...opts,body:JSON.stringify(payload),headers:{...opts.headers,'X-Guest-ID':guest,...aiHeaders()}};
   }
   return originalFetch(input,opts);
 };
@@ -123,6 +140,7 @@ async function loadAccount(u){
 async function accountPanel(){
   if(busy||syncRunning){toast('Wait for the current operation to finish.');return}
   const box=panel(user?'Your account':'Account & chat storage');
+  box.append(button('API key',keyPanel));
   if(user){
     box.append(element('p','Signed in as '+user.username+'. Account chats are stored on this server. Guest chats stay separate in your browser.'));
     box.append(button('Import guest chats into account',async()=>{
@@ -136,7 +154,7 @@ async function accountPanel(){
     box.append(button('Sign out',async()=>{
       if(syncRunning||busy){toast('Wait for the current operation to finish.');return}
       clearTimeout(syncTimer);if(dirty){await sync();if(dirty){toast('Sync has not finished. Export your chats or resolve the sync issue before signing out.');return}}
-      try{await api('/auth/logout',{method:'POST'});user=null;chats=safeLoad('hynex');cur=null;selectedIds=[];renderList();welcome();attachmentStatus();status('Guest · chats saved in this browser');dialog.close()}catch(e){toast(e.message)}
+      try{await api('/auth/logout',{method:'POST'});user=null;geminiKey='';chats=safeLoad('hynex');cur=null;selectedIds=[];renderList();welcome();attachmentStatus();status('Guest · chats saved in this browser');dialog.close()}catch(e){toast(e.message)}
     }));return;
   }
   const google=button('Continue with Google',()=>{window.location.assign('/api/auth/google/start')},'fx-google');
@@ -231,7 +249,7 @@ async function sourcePanel(){
   const run=async()=>{try{out.replaceChildren();const data=await (await api('/knowledge/search',{method:'POST',body:JSON.stringify({query:query.value,attachment_ids:selectedIds})})).json();if(!data.hits.length)out.append(element('p','No matching reference notes found.'));for(const hit of data.hits){const card=element('div',undefined,'fx-card');card.append(element('strong',hit.source+' · '+hit.score),element('p',hit.text));out.append(card)}}catch(e){msg.textContent=e.message}};
   box.append(button('Search notes',run,'fx-primary'),out);if(query.value)await run();
 }
-controls.append(button('Appearance',themePanel),button('Account',accountPanel),button('Review',()=>qualityPanel()),button('Knowledge',sourcePanel));
+controls.append(button('API key',keyPanel),button('Appearance',themePanel),button('Account',accountPanel),button('Review',()=>qualityPanel()),button('Knowledge',sourcePanel));
 // Compact composer: add on the left, dictation beside the existing send button.
 const svg=(paths)=>'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
 const micIcon=svg('<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/>');

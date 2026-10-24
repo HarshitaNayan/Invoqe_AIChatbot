@@ -16,10 +16,10 @@ SYSTEM = (
 )
 
 
-def stream_gemini(history, message, context, attachments=None):
-    key = os.getenv("GEMINI_API_KEY")
+def stream_gemini(history, message, context, attachments=None, *, api_key=None):
+    key = api_key
     if not key:
-        raise RuntimeError("GEMINI_API_KEY is not set")
+        raise RuntimeError("Add your Gemini API key using the API key button.")
 
     system = SYSTEM + (f"\n\nKnowledge notes:\n{context}" if context else "")
     contents = [

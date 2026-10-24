@@ -18,6 +18,8 @@ Rename, pin or unpin, and delete chats directly from the sidebar.
 
 ## Features
 
+- **Bring your own key (BYOK):** visitors enter their own Gemini key using **API key** in the sidebar or Account panel. The key stays in page memory, clears on reload or sign-out, and is passed through the backend to Google for that visitor’s requests. It is not saved in the database or browser storage. The app does not use the deployer’s Gemini key. Only enter keys on an app host you trust.
+
 - **AI chat:** streamed Gemini responses, recent conversation context, Markdown formatting and copyable code blocks.
 - **Chat management:** create multiple chats, rename them, pin favourites and delete chats with confirmation.
 - **File attachments:** attach PDFs, TXT/Markdown notes and PNG/JPG/WEBP images using the **+** button. Ask questions about selected files or request a summary from **Files**.
@@ -55,12 +57,9 @@ cd Invoqe_AIChatbot
 python -m pip install -r requirements.txt
 ```
 
-Create a `.env` file in the project root with your Gemini API key:
+No shared Gemini key is required on the server. After opening Hynex, click **API key**, paste your own Gemini API key and click **Use key for this tab**. Re-enter it after refreshing or reopening the app. Requests use your key’s quota and any applicable billing on your Google project.
 
-```dotenv
-GEMINI_API_KEY=your_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
-```
+You may configure `GEMINI_MODEL` in `.env` or your host’s environment; the default is `gemini-2.5-flash`. Google sign-in still needs its separate OAuth configuration.
 
 Start the development server:
 
@@ -93,7 +92,7 @@ Keep `.env` and the private `runtime/` database out of Git. Hosted accounts requ
 ## Limitations
 
 - AI answers can be incorrect; check important information.
-- Gemini-dependent tools require an API key and available quota. Offline mode provides basic intent responses only.
+- Gemini-dependent tools require each visitor’s API key and available quota. Offline mode provides basic intent responses only.
 - Voice input depends on browser support and is speech-to-text, not a live voice conversation.
 - Scanned PDFs may not provide extractable text; attach an image for image-based questions.
 - Google login needs OAuth configuration. Local accounts currently have no password recovery or email verification.

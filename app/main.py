@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import FastAPI, Request
-from app.extensions import router, prepare_context, install_extensions
+from app.extensions import router, prepare_context, install_extensions, visitor_key
 from app.storage import init_db
 from app.google_login import router as google_router, init_google_tables
 from app.identity import creator_reply
@@ -48,13 +48,14 @@ def chat(req: ChatRequest, request: Request):
     identity = creator_reply(req.message)
     if identity:
         return StreamingResponse(iter([identity]), media_type="text/plain; charset=utf-8")
+    key = visitor_key(request)
     history = [m.model_dump() for m in req.history]
     enhanced, docs = prepare_context(request, req.message, req.attachment_ids)
 
     def generate():
         started = False
         try:
-            for chunk in stream_gemini(history, req.message, bot.context(req.message) + "\n\n" + enhanced, docs):
+            for chunk in stream_gemini(history, req.message, bot.context(req.message) + "\n\n" + enhanced, docs, api_key=key):
                 started = True
                 yield chunk
         except Exception as e:
@@ -63,7 +64,7 @@ def chat(req: ChatRequest, request: Request):
                 yield "\n\n[Connection interrupted. Please retry your question.]"
             if not started:  # no key / API error: fall back to the local TF-IDF bot
                 reply, _, _ = bot.get_reply(req.message)
-                yield "Offline mode (LLM not connected). " + reply
+                yield "Offline mode (add or check your Gemini key using API key; also check quota and connection). " + reply
 
     return StreamingResponse(generate(), media_type="text/plain; charset=utf-8")
 
