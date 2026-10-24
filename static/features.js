@@ -12,7 +12,7 @@ function keyPanel(){
   const msg=errorBox(box);
   box.append(button('Use key for this tab',()=>{
     const key=input.value.trim();
-    if(!/^[A-Za-z0-9_-]{20,256}$/.test(key)){msg.textContent='Paste only your Gemini API key (no quotes or variable name).';return}
+    if(!/^[A-Za-z0-9._-]{20,2048}$/.test(key)){msg.textContent='Paste only your Gemini API key (no quotes or variable name).';return}
     geminiKey=key;input.value='';dialog.close();toast('Key set for this tab. It will be checked when you make an AI request.');
   },'fx-primary'),button('Remove key',()=>{geminiKey='';input.value='';dialog.close();toast('Key removed. Basic offline chat remains available.')}));
   const link=element('a','Get a Gemini API key in Google AI Studio');link.href='https://aistudio.google.com/apikey';link.target='_blank';link.rel='noopener noreferrer';box.append(link);

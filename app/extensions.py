@@ -52,7 +52,7 @@ def install_extensions(app):
 def visitor_key(request):
     # Request-scoped only: never stored in an account, database, cookie or log.
     key = request.headers.get('x-gemini-api-key', '').strip()
-    if key and not re.fullmatch(r'[A-Za-z0-9_-]{20,256}', key):
+    if key and not re.fullmatch(r'[A-Za-z0-9._-]{20,2048}', key):
         raise HTTPException(400, 'Invalid API key format. Paste only your Gemini API key.')
     return key
 

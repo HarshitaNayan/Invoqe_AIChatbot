@@ -46,3 +46,13 @@ class VisitorKeys(unittest.TestCase):
     def test_bad_header_rejected(self):
         r=self.client.post('/chat',headers={'X-Gemini-API-Key':'bad key'},json={'message':'hello'})
         self.assertEqual(r.status_code,400)
+
+    def test_dotted_key_reaches_provider_unchanged(self):
+        key='AQ.fake-test-only.dotted_key-1234567890'
+        with patch('app.main.stream_gemini',return_value=iter(['answer'])) as stream:
+            result=self.client.post('/chat',headers={'X-Gemini-API-Key':key},json={'message':'Explain a loop'})
+            self.assertEqual(result.status_code,200)
+            self.assertEqual(result.text,'answer')
+            self.assertEqual(stream.call_args.kwargs['api_key'],key)
+        for key in ['a'*2049, 'AQ.invalid key with spaces', 'AQ.bad"quoted-key-123456']:
+            self.assertEqual(self.client.post('/chat',headers={'X-Gemini-API-Key':key},json={'message':'hi'}).status_code,400)
