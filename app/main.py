@@ -59,7 +59,7 @@ def chat(req: ChatRequest, request: Request):
                 started = True
                 yield chunk
         except Exception as e:
-            print("LLM ERROR:", type(e).__name__)
+            print("LLM ERROR:", str(e) if isinstance(e, RuntimeError) else type(e).__name__, flush=True)
             if started:
                 yield "\n\n[Connection interrupted. Please retry your question.]"
             if not started:  # no key / API error: fall back to the local TF-IDF bot
