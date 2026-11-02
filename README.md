@@ -2,8 +2,6 @@
 
 Hynex is a web-based learning assistant built with FastAPI and the Gemini API. It combines conversational answers with file summaries, quizzes, flashcards and tools for organising study chats.
 
-Created by **Harshita Nayan** as part of the **Invoqe AI/ML Developer internship — AI Chatbot & NLP System**.
-
 **[Live Demo](https://invoqe-aichatbot.onrender.com/)** · **[GitHub Repository](https://github.com/HarshitaNayan/Invoqe_AIChatbot)**
 
 ## Preview
