@@ -133,7 +133,6 @@ python -m unittest discover -s tests
 ```
 
 ## Limitations
-
 - AI answers and generated quiz answers can be incorrect; check important information.
 - Gemini-dependent features require a visitor key, model access, available quota and a network connection. Offline replies cover basic stored intents only and may be irrelevant.
 - Voice input is speech-to-text, not a live voice conversation. Clipboard-image paste and microphone behaviour depend on browser support.
